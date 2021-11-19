@@ -40,11 +40,6 @@ def get_args():
         default='',
         required=False)
     parser.add_argument(
-        '--cell-range',
-        dest='cell_range',
-        default='A1:ZZZ5000000',
-        required=False)
-    parser.add_argument(
         '--api-key',
         dest='api_key',
         default=None,
