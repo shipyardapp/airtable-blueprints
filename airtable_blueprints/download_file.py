@@ -1,8 +1,15 @@
-from pyairtable import Base, Table
+from pyairtable import Table
 import os
 import argparse
 import pandas as pd
-import code
+from requests.exceptions import HTTPError
+import sys
+
+EXIT_CODE_UNKNOWN_ERROR = 3
+EXIT_CODE_INVALID_CREDENTIALS = 200
+EXIT_CODE_INVALID_BASE = 201
+EXIT_CODE_INVALID_TABLE = 202
+EXIT_CODE_INVALID_VIEW = 203
 
 
 def get_args():
@@ -101,9 +108,33 @@ def main():
             (destination_folder_name != ''):
         os.makedirs(destination_folder_name)
 
-    code.interact(local=locals())
-    table = Table(api_key, base_id, table_name)
-    records = table.all(view=view_name)
+    try:
+        table = Table(api_key, base_id, table_name)
+        records = table.all(view=view_name)
+    except HTTPError as httpe:
+        print(httpe)
+        if 'Unauthorized for url:' in str(httpe):
+            print(
+                'The API key provided is incorrect. Please double-check for extra spaces or invalid characters.')
+
+            sys.exit(EXIT_CODE_INVALID_CREDENTIALS)
+        elif 'Error: NOT_FOUND' in str(httpe):
+            print(
+                'The Base ID provided is incorrect. Please double-check for extra spaces or invalid characters.')
+            sys.exit(EXIT_CODE_INVALID_BASE)
+        elif 'TABLE_NOT_FOUND' in str(httpe):
+            print(
+                'The Table Name or ID provided is incorrect. Please double-check for extra spaces, invalid characters, or typos.')
+            sys.exit(EXIT_CODE_INVALID_TABLE)
+        elif 'VIEW_NAME_NOT_FOUND' in str(httpe):
+            print(
+                'The View Name or ID provided is incorrect. Please double-check for extra spaces, invalid characters, or typos.')
+            sys.exit(EXIT_CODE_INVALID_VIEW)
+        else:
+            sys.exit(EXIT_CODE_UNKNOWN_ERROR)
+    except BaseException as e:
+        print(e)
+        sys.exit(EXIT_CODE_UNKNOWN_ERROR)
 
     df = pd.DataFrame.from_records(row['fields'] for row in records)
 
