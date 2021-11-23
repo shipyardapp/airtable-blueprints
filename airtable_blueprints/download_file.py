@@ -138,6 +138,8 @@ def main():
             df.at[index, 'airtable_record_id'] = row['id']
 
     df.to_csv(destination_full_path, index=False)
+    print(
+        f'Successfully stored the contents of Base:{base_id} Table:{table_name} View:{view_name} as {destination_full_path}')
 
 
 if __name__ == '__main__':
